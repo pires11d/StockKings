@@ -1,18 +1,19 @@
 import pandas as pd
 import numpy as np
-import seaborn as sns
 import yfinance as yf
+import datetime
 from plotly import graph_objects as go
 from plotly.subplots import make_subplots
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-from Stock import *
+from Market import *                            
+pd.options.plotting.backend = "plotly"
 
 
 def main():                                               
     # Gets data from the chosen Stock by its name                      
-    symbol = "TSLA"
+    symbol = "WEGE3.SA"
     period = "1y"
     S = Stock(symbol,period)
 
@@ -22,9 +23,9 @@ def main():
         company = symbol
         
     # Subplots layout creation
-    fig = make_subplots(rows=3, 
+    fig = make_subplots(rows=4, 
                         cols=1,
-                        row_heights=[0.6,0.3,0.1],
+                        row_heights=[0.5,0.2,0.2,0.1],
                         vertical_spacing=0.0,
                         shared_xaxes=True)
 
@@ -69,19 +70,7 @@ def main():
             ),
         row=1, 
         col=1
-        )    
-    
-    # Plotting volume
-    fig.add_trace(
-        go.Bar(
-            name="Volume",
-            x=S.History["Date"],
-            y=S.History["Volume"],  
-            marker_color="Gray"
-            ),
-        row=3,
-        col=1
-        )
+        )  
                
     # Plotting Simple Moving Averages
     numbers = [20]
@@ -113,48 +102,106 @@ def main():
         
     # Plotting the MACD line
     fig.add_trace(
-            go.Scatter(
-                x=list(S.MACD().keys()), 
-                y=list(S.MACD().values()), 
-                name="MACD",        
-                line_shape="spline",
-                line_color="Green",
-                ),
-            row=2, 
-            col=1
-            )
+        go.Scatter(
+            x=list(S.MACD().keys()), 
+            y=list(S.MACD().values()), 
+            name="MACD",        
+            line_shape="spline",
+            line_color="Green",
+            ),
+        row=2, 
+        col=1
+        )
     
      # Plotting the MACD-Signal line
     fig.add_trace(
-            go.Scatter(
-                x=list(S.MACD9().keys()), 
-                y=list(S.MACD9().values()), 
-                name="MACD-Signal(9)",        
-                line_shape="spline",
-                line_color="Red",
-                ),
-            row=2, 
-            col=1
-            ) 
+        go.Scatter(
+            x=list(S.MACD9().keys()), 
+            y=list(S.MACD9().values()), 
+            name="MACD-Signal(9)",        
+            line_shape="spline",
+            line_color="Red",
+            ),
+        row=2, 
+        col=1
+        ) 
     
     # Plotting the MACD difference histogram
     fig.add_trace(
-            go.Bar(
-                x=list(S.MACD_diff().keys()), 
-                y=list(S.MACD_diff().values()), 
-                name="MACD Histogram",
-                yaxis = "y2"
-                ),
-            row=2, 
-            col=1
-            ) 
+        go.Bar(
+            x=list(S.MACD_diff("+").keys()), 
+            y=list(S.MACD_diff("+").values()), 
+            name="MACD Histogram (+)", 
+            yaxis="y2",
+            marker_color="ForestGreen",
+            ),
+        row=2, 
+        col=1
+        )
+    fig.add_trace(
+        go.Bar(
+            x=list(S.MACD_diff("-").keys()), 
+            y=list(S.MACD_diff("-").values()), 
+            name="MACD Histogram (-)",
+            yaxis="y2",
+            marker_color="IndianRed", 
+            ),
+        row=2, 
+        col=1
+        )
+              
+    # Plotting RSI
+    fig.add_trace(
+        go.Scatter(
+            x=list(S.RSI().keys()), 
+            y=list(S.RSI().values()), 
+            name="RSI(14)",        
+            line_shape="spline",
+            line_color="black"),
+        row=3, 
+        col=1
+        ) 
+    fig.add_trace(
+        go.Scatter(
+            x=[list(S.History["Date"])[0], list(S.History["Date"])[-1]], 
+            y=[30,30],
+            mode="lines",
+            showlegend=False,
+            line=dict(width=1, dash="dot", color="red")),
+        row=3, 
+        col=1
+        )
+    fig.add_trace(
+        go.Scatter(                                                   
+            x=[list(S.History["Date"])[0], list(S.History["Date"])[-1]],  
+            y=[70,70],
+            mode="lines",
+            showlegend=False,       
+            line=dict(width=1, dash="dot", color="red")),
+        row=3, 
+        col=1
+        ) 
+
+    # Plotting volume
+    fig.add_trace(
+        go.Bar(
+            name="Volume",
+            x=S.History["Date"],
+            y=S.History["Volume"],  
+            marker_color="Gray"),
+        row=4,
+        col=1
+        ) 
 
     # Updates layout and displays graph
     fig.update_layout(
         xaxis_rangeslider_visible=False,
         title=company,
-        height=700,
+        height=900,
+        yaxis=dict(
+            spikemode="across"),
         xaxis=dict(
+            spikemode="across",
             rangeselector=dict(
                 buttons=list([
                     dict(count=1,
@@ -168,6 +215,10 @@ def main():
                     dict(count=6,
                          label="6m",
                          step="month",
+                         stepmode="todate"),  
+                    dict(count=1,
+                         label="YTD",
+                         step="year",
                          stepmode="todate"),
                     dict(count=1,
                          label="1y",
@@ -182,10 +233,17 @@ def main():
             type="date"
             )
         )      
-    fig.update_xaxes(rangebreaks=[dict(bounds=["sat", "mon"])])
-    fig.update_yaxes(title_text="Stock Price", row=1, col=1)
-    fig.update_yaxes(title_text="MACD", row=2, col=1)
-    fig.update_yaxes(title_text="Volume", row=3, col=1)
+    fig.update_xaxes(rangebreaks=[dict(bounds=["sat", "mon"])],
+                     spikemode="across")
+    fig.update_yaxes(title_text="Stock Price", row=1, col=1,
+                     spikemode="across")
+    fig.update_yaxes(title_text="MACD", row=2, col=1,
+                     spikemode="across")
+    fig.update_yaxes(title_text="RSI", row=3, col=1, 
+                     spikemode="across",
+                     tickvals=[0, 30, 50, 70, 100], range=[0,100])
+    fig.update_yaxes(title_text="Volume", row=4, col=1, 
+                     spikemode="across")
     fig.show()
             
 
@@ -195,17 +253,16 @@ def main():
     # app.run_server(debug=True, use_reloader=True)  # Turn off reloader if inside Jupyter
 
 
-def main2():
-    
-    tickers = "ABEV3.SA ITSA4.SA WEGE3.SA USIM5.SA VALE3.SA"
-
-    carteira = yf.download(tickers, period="1y")["Adj Close"]       
-    carteira.dropna(inplace=True)
+def main2():                               
                                  
     #ibov = yf.download("^BVSP", period="1y")["Adj Close"] 
-    #ibov.dropna(inplace=True)
-    sns.set()
-    carteira.plot(figsize=(18,8));  
+    #ibov.dropna(inplace=True)   
+    
+    tickers = ["ABEV3.SA", "ITSA4.SA", "WEGE3.SA", "USIM5.SA", "VALE3.SA"]    
+    P = Portfolio(tickers)
+                                     
+    fig = P.Stocks.plot()
+    fig.show()                   
 
                                
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 import yfinance as yf
 from pandas import DataFrame
-from Auction import *
+from .Auction import *
 
 
 class Stock:
@@ -78,8 +78,28 @@ class Stock:
                     if a.Nose < a.Body:
                         if a1.Open <= min([a.Open,a.Close]) and a1.Close <= a.Close:
                             aux.append(a)
-        return aux   
+        return aux
+
+
+    def GetValuesDict(self, property, value="Close"):
+        auxList = []
+        df = self.History
+        valueList = getattr(self,property)
+        for i, v in df.iterrows():
+            for a in valueList:
+                if v["Date"] == a.Date:
+                    auxList.append(v)
+        auxDict = dict()
+        dates = []
+        values = []
+        for h in auxList:
+            dates.append(h["Date"])
+            values.append(h[value])
+        auxDict["Date"] = dates
+        auxDict[value] = values 
+        return auxDict   
                 
+
     def Multiplier(self, number):
         return 2/(number+1) 
     
@@ -139,32 +159,56 @@ class Stock:
             i += 1            
         return auxDict
 
-    def MACD_diff(self):
+    def MACD_diff(self,filter=""):
         auxDict = dict()
         MACD = self.MACD()
         MACD9 = self.MACD9()
         for k, v in MACD9.items():
             aux = MACD9[k] - MACD[k]
             auxDict[k] = aux
-        return auxDict
+        if filter=="+":
+            return dict((k, v) for k, v in auxDict.items() if v >= 0) 
+        if filter=="-":
+            return dict((k, v) for k, v in auxDict.items() if v < 0)
+        else:
+            return auxDict
 
-    def GetValuesDict(self, property, value="Close"):
-        auxList = []
-        df = self.History
-        valueList = getattr(self,property)
-        for i, v in df.iterrows():
-            for a in valueList:
-                if v["Date"] == a.Date:
-                    auxList.append(v)
+    def Variation(self):
+        varDict = dict()
+        for i, r in self.History.iterrows():
+            if i>0:
+                a = Auction(r)
+                a_1 = Auction(self.History.iloc[i-1])
+                var = a.Close - a_1.Close
+                varDict[a.Date] = var
+        return varDict
+
+    def RSI(self, number=14):
         auxDict = dict()
-        dates = []
-        values = []
-        for h in auxList:
-            dates.append(h["Date"])
-            values.append(h[value])
-        auxDict["Date"] = dates
-        auxDict[value] = values 
+        Variation = self.Variation()
+        i = 0
+        for k, v in Variation.items():
+            if i>=number-1+1:
+                gain, loss, m, n = 0, 0, 0, 0
+                for j in range(i, i-number, -1):
+                    a = Auction(self.History.iloc[j])
+                    var = Variation[a.Date]
+                    if var > 0:
+                        gain += var
+                        m += 1
+                    elif var < 0:
+                        loss += abs(var)
+                        n += 1
+                avgGain = gain / m
+                avgLoss = loss / n
+                if avgLoss == 0:
+                    RS = 1.0
+                else:
+                    RS = avgGain / avgLoss
+                RSI = 100 - 100/(1+RS)
+                auxDict[k] = RSI
+            i += 1
         return auxDict
-
+        
                             
         
