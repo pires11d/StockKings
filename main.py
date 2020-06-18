@@ -25,39 +25,48 @@ def main():
     # Subplots layout creation
     fig = make_subplots(rows=4, 
                         cols=1,
-                        row_heights=[0.5,0.2,0.2,0.1],
+                        row_heights=[0.6,0.15,0.15,0.1],
                         vertical_spacing=0.0,
                         shared_xaxes=True)
 
-    # Printing indicators values 
-    yDict = dict()
-    indicators = ["Hammer","InvertedHammer","ShootingStar","HangingMan"]
-    for i in indicators:                 
-        print(i+": "+str(len(S.GetValuesDict(i)["Date"])))
-        
-    ## Plotting main indicators
-    #for k,y in yDict.items():
-    #    fig.add_trace(
-    #        go.Scatter(
-    #            name=k,
-    #            x=y["Date"], 
-    #            y=y["Close"], 
-    #            mode="markers",
-    #            marker=dict(      
-    #                #color="Orange"
-    #                #symbol="square",
-    #                opacity=0.4,
-    #                size=20,
-    #                line=dict(
-    #                        #color="Purple",
-    #                        width=2
-    #                )
-    #            )
-    #        ),
-    #    row=1, 
-    #    col=1
-    #    )                       
 
+    # Indicators dictionaries creation
+    indicators = dict()
+    names, colors = [], []     
+    #names += ["Hammer","InvertedHammer","ShootingStar","HangingMan"]
+    #names += ["MorningStar","EveningStar"]            
+    #names += ["BearishEngulfing","BullishEngulfing"]
+    names += ["Top","Bottom"]
+    colors += ["Blue","Red"]                  
+    colorDict = dict(zip(names,colors))   
+    for i in names:
+        indicators[i] = S._getDict(i, "Avg")
+        print(i+": "+str(len(indicators[i])))     
+        
+
+    # Plotting main indicators
+    for k, v in indicators.items():
+        fig.add_trace(
+            go.Scatter(
+                name=k,
+                x=list(v.keys()), 
+                y=list(v.values()), 
+                mode="markers",
+                marker=dict( 
+                    symbol="circle-open",     
+                    opacity=1,
+                    size=30,
+                    line=dict(
+                            color=colorDict[k],
+                            width=1),
+                    #color="Orange",
+                    )
+                ),
+            row=1, 
+            col=1
+            )   
+        
+        
     # Plotting CandleStick series   
     fig.add_trace(
         go.Candlestick(
@@ -67,11 +76,24 @@ def main():
             high=S.History["High"],
             low=S.History["Low"],
             close=S.History["Close"],
+            increasing = dict(
+                fillcolor = "White",
+                line = dict(
+                    color = "Gray",
+                    width = 1),
+                ),
+            decreasing = dict(
+                fillcolor = "Black",
+                line = dict(
+                    color = "Black",
+                    width = 1),
+                ),
             ),
         row=1, 
         col=1
         )  
-               
+                                             
+
     # Plotting Simple Moving Averages
     numbers = [20]
     for n in numbers:
@@ -197,7 +219,7 @@ def main():
     fig.update_layout(
         xaxis_rangeslider_visible=False,
         title=company,
-        height=900,
+        height=1000,
         yaxis=dict(
             spikemode="across"),
         xaxis=dict(
@@ -207,15 +229,15 @@ def main():
                     dict(count=1,
                          label="1m",
                          step="month",
-                         stepmode="todate"),
+                         stepmode="backward"),
                     dict(count=3,
                          label="3m",
                          step="month",
-                         stepmode="todate"),
+                         stepmode="backward"),
                     dict(count=6,
                          label="6m",
                          step="month",
-                         stepmode="todate"),  
+                         stepmode="backward"),  
                     dict(count=1,
                          label="YTD",
                          step="year",

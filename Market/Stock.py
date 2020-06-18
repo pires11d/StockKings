@@ -17,6 +17,14 @@ class Stock:
         self.History["Date"] = self.History.index
         self.History.insert(0,"id",range(0,len(self.History.index)))
         self.History.set_index(self.History["id"],inplace=True)
+    
+    def _getDict(self, property, value="Close"):
+        auxDict = dict()
+        aList = getattr(self, property)
+        for a in aList:
+            auxDict[a.Date] = getattr(a, value)
+        return auxDict
+
 
     @property
     def Hammer(self):
@@ -32,8 +40,6 @@ class Stock:
                         if a1.Up and a1.Open >= max([a.Open,a.Close]) and a1.Close >= a.Close:
                             aux.append(a)
         return aux
-
-
     @property
     def InvertedHammer(self):
         aux = []
@@ -48,13 +54,13 @@ class Stock:
                         if a1.Up and a1.Open >= max([a.Open,a.Close]) and a1.High >= a.High:
                             aux.append(a)
         return aux
-    
+
 
     @property
     def ShootingStar(self):
         aux = []
         for i, r in self.History.iterrows():
-            if i<len(self.History.index)-1:
+            if i>0 and i<len(self.History.index)-1:
                 a = Auction(r)
                 a_1 = Auction(self.History.iloc[i-1])
                 a1 = Auction(self.History.iloc[i+1])
@@ -64,12 +70,11 @@ class Stock:
                         if a1.Open <= min([a.Open,a.Close]) and a1.Close <= a.Close:
                             aux.append(a)
         return aux
-
     @property
     def HangingMan(self):
         aux = []
         for i, r in self.History.iterrows():
-            if i<len(self.History.index)-1:
+            if i>0 and i<len(self.History.index)-1:
                 a = Auction(r)
                 a_1 = Auction(self.History.iloc[i-1])
                 a1 = Auction(self.History.iloc[i+1])
@@ -81,24 +86,90 @@ class Stock:
         return aux
 
 
-    def GetValuesDict(self, property, value="Close"):
-        auxList = []
-        df = self.History
-        valueList = getattr(self,property)
-        for i, v in df.iterrows():
-            for a in valueList:
-                if v["Date"] == a.Date:
-                    auxList.append(v)
-        auxDict = dict()
-        dates = []
-        values = []
-        for h in auxList:
-            dates.append(h["Date"])
-            values.append(h[value])
-        auxDict["Date"] = dates
-        auxDict[value] = values 
-        return auxDict   
-                
+    @property
+    def MorningStar(self):
+        aux = []
+        for i, r in self.History.iterrows():
+            if i>0 and i<len(self.History.index)-1:
+                a1 = Auction(self.History.iloc[i-1])
+                a2 = Auction(r)
+                a3 = Auction(self.History.iloc[i+1])
+                if a1.Down and a1.BigBody:
+                    if a2.SmallBody and a2.Max <= a1.Min:
+                        if a3.Up and a3.Max >= a1.Min: 
+                            aux.append(a2)
+        return aux      
+    @property
+    def EveningStar(self):
+        aux = []
+        for i, r in self.History.iterrows():
+            if i>0 and i<len(self.History.index)-1:
+                a1 = Auction(self.History.iloc[i-1])
+                a2 = Auction(r)
+                a3 = Auction(self.History.iloc[i+1])
+                if a1.Up and a1.BigBody:
+                    if a2.SmallBody and a2.Min <= a1.Max:
+                        if a3.Down and a3.Min >= a1.Max: 
+                            aux.append(a2)
+        return aux
+
+
+    @property
+    def BullishEngulfing(self):
+        aux = []
+        for i, r in self.History.iterrows():
+            if i>0 and i<len(self.History.index)-1:     
+                a_1 = Auction(self.History.iloc[i-1])     
+                a = Auction(r)
+                a1 = Auction(self.History.iloc[i+1])
+                if a.Down and a1.Up:
+                    #if a.Low < a_1.Low:
+                    if a1.Open <= a.Close and a1.Close > a.Open:
+                        aux.append(a)
+        return aux     
+    @property
+    def BearishEngulfing(self):
+        aux = []
+        for i, r in self.History.iterrows():
+            if i>0 and i<len(self.History.index)-1:
+                a_1 = Auction(self.History.iloc[i-1])
+                a = Auction(r)
+                a1 = Auction(self.History.iloc[i+1])
+                if a.Up and a1.Down:
+                    #if a.High > a_1.High:
+                    if a1.Close <= a.Open and a1.Open > a.Close:
+                        aux.append(a)
+        return aux 
+
+
+    @property
+    def Top(self):
+        aList = []
+        for i, r in self.History.iterrows():
+            if i>1 and i<len(self.History.index)-2:  
+                a_2 = Auction(self.History.iloc[i-2])
+                a_1 = Auction(self.History.iloc[i-1])   
+                a = Auction(r)                    
+                a1 = Auction(self.History.iloc[i+1])
+                a2 = Auction(self.History.iloc[i+2])                   
+                if a.High > max(a1.High,a2.High) and a.High > max(a_1.High,a_2.High):
+                    aList.append(a)
+        return aList
+    
+    @property
+    def Bottom(self):
+        aList = []
+        for i, r in self.History.iterrows():
+            if i>1 and i<len(self.History.index)-2:      
+                a_2 = Auction(self.History.iloc[i-2])
+                a_1 = Auction(self.History.iloc[i-1])
+                a = Auction(r)
+                a1 = Auction(self.History.iloc[i+1])      
+                a2 = Auction(self.History.iloc[i+2])   
+                if a.Low < min(a1.Low,a2.Low) and a.Low < min(a_1.Low,a_2.Low):
+                    aList.append(a)
+        return aList
+
 
     def Multiplier(self, number):
         return 2/(number+1) 
