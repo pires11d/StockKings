@@ -12,9 +12,9 @@ pd.options.plotting.backend = "plotly"
 
 
 def main():                                               
-    # Gets data from the chosen Stock by its name                      
-    symbol = "WEGE3.SA"
-    period = "1y"
+    # GETS DATA FROM THE CHOSEN STOCK BY ITS NAME                      
+    symbol = "CAP.PA"
+    period = "6mo"
     S = Stock(symbol,period)
 
     try:
@@ -22,7 +22,7 @@ def main():
     except:
         company = symbol
         
-    # Subplots layout creation
+    # SUBPLOTS LAYOUT CREATION
     fig = make_subplots(rows=4, 
                         cols=1,
                         row_heights=[0.6,0.15,0.15,0.1],
@@ -30,7 +30,7 @@ def main():
                         shared_xaxes=True)
 
 
-    # Indicators dictionaries creation
+    # INDICATORS DICTIONARIES CREATION
     indicators = dict()
     names, colors = [], []     
     #names += ["Hammer","InvertedHammer","ShootingStar","HangingMan"]
@@ -44,7 +44,7 @@ def main():
         print(i+": "+str(len(indicators[i])))     
         
 
-    # Plotting main indicators
+    # PLOTTING MAIN INDICATORS
     for k, v in indicators.items():
         fig.add_trace(
             go.Scatter(
@@ -67,7 +67,7 @@ def main():
             )   
         
         
-    # Plotting CandleStick series   
+    # PLOTTING CANDLESTICK SERIES   
     fig.add_trace(
         go.Candlestick(
             name=symbol,
@@ -94,7 +94,7 @@ def main():
         )  
                                              
 
-    # Plotting Simple Moving Averages
+    # PLOTTING SIMPLE MOVING AVERAGES
     numbers = [20]
     for n in numbers:
         fig.add_trace(
@@ -108,7 +108,7 @@ def main():
             col=1
             )      
              
-    # Plotting Exponential Moving Averages
+    # PLOTTING EXPONENTIAL MOVING AVERAGES
     numbers = [20]
     for n in numbers:
         fig.add_trace(
@@ -122,7 +122,7 @@ def main():
             col=1
             )   
         
-    # Plotting the MACD line
+    # PLOTTING THE MACD LINE
     fig.add_trace(
         go.Scatter(
             x=list(S.MACD().keys()), 
@@ -135,7 +135,7 @@ def main():
         col=1
         )
     
-     # Plotting the MACD-Signal line
+     # PLOTTING THE MACD-SIGNAL LINE
     fig.add_trace(
         go.Scatter(
             x=list(S.MACD9().keys()), 
@@ -148,7 +148,7 @@ def main():
         col=1
         ) 
     
-    # Plotting the MACD difference histogram
+    # PLOTTING THE MACD DIFFERENCE HISTOGRAM
     fig.add_trace(
         go.Bar(
             x=list(S.MACD_diff("+").keys()), 
@@ -172,7 +172,7 @@ def main():
         col=1
         )
               
-    # Plotting RSI
+    # PLOTTING THE RSI
     fig.add_trace(
         go.Scatter(
             x=list(S.RSI().keys()), 
@@ -204,7 +204,7 @@ def main():
         col=1
         ) 
 
-    # Plotting volume
+    # PLOTTING VOLUME
     fig.add_trace(
         go.Bar(
             name="Volume",
@@ -215,11 +215,11 @@ def main():
         col=1
         ) 
 
-    # Updates layout and displays graph
+    # UPDATES LAYOUT AND DISPLAYS GRAPH
     fig.update_layout(
         xaxis_rangeslider_visible=False,
         title=company,
-        height=1000,
+        height=800,
         yaxis=dict(
             spikemode="across"),
         xaxis=dict(
@@ -266,13 +266,104 @@ def main():
                      tickvals=[0, 30, 50, 70, 100], range=[0,100])
     fig.update_yaxes(title_text="Volume", row=4, col=1, 
                      spikemode="across")
+
+    # ADDS OTHER BUTTONS
+    button_layer_1_height = 1.08
+    fig.update_layout(
+        updatemenus=[
+            dict(
+                buttons=list([
+                    dict(
+                        args=["colorscale", "Viridis"],
+                        label="Viridis",
+                        method="restyle"
+                    ),
+                    dict(
+                        args=["colorscale", "Cividis"],
+                        label="Cividis",
+                        method="restyle"
+                    ),
+                    dict(
+                        args=["colorscale", "Blues"],
+                        label="Blues",
+                        method="restyle"
+                    ),
+                    dict(
+                        args=["colorscale", "Greens"],
+                        label="Greens",
+                        method="restyle"
+                    ),
+                ]),
+                direction="down",
+                pad={"r": 20, "t": 10},
+                showactive=True,
+                x=0.1,
+                xanchor="right",
+                y=button_layer_1_height,
+                yanchor="top"
+            ),
+            dict(
+                buttons=list([
+                    dict(
+                        args=["reversescale", False],
+                        label="False",
+                        method="restyle"
+                    ),
+                    dict(
+                        args=["reversescale", True],
+                        label="True",
+                        method="restyle"
+                    )
+                ]),
+                direction="down",
+                pad={"r": 20, "t": 10},
+                showactive=True,
+                x=0.37,
+                xanchor="right",
+                y=button_layer_1_height,
+                yanchor="top"
+            ),
+            dict(
+                buttons=list([
+                    dict(
+                        args=[{"contours.showlines": False, "type": "contour"}],
+                        label="Hide lines",
+                        method="restyle"
+                    ),
+                    dict(
+                        args=[{"contours.showlines": True, "type": "contour"}],
+                        label="Show lines",
+                        method="restyle"
+                    ),
+                ]),
+                direction="down",
+                pad={"r": 20, "t": 10},
+                showactive=True,
+                x=0.58,
+                xanchor="right",
+                y=button_layer_1_height,
+                yanchor="top"
+            ),
+        ]
+    )
+
+    fig.update_layout(
+        annotations=[
+            dict(text="colorscale", x=0, xref="paper", y=1.06, yref="paper",
+                                 align="left", showarrow=False),
+            dict(text="Reverse<br>Colorscale", x=0.25, xref="paper", y=1.07,
+                                 yref="paper", showarrow=False),
+            dict(text="Lines", x=0.54, xref="paper", y=1.06, yref="paper",
+                                 showarrow=False)
+        ])
+                                  
     fig.show()
             
 
-    # Dash application
-    # app = dash.Dash()
-    # app.layout = html.Div([dcc.Graph(figure=fig), html.Button("Texto")])
-    # app.run_server(debug=True, use_reloader=True)  # Turn off reloader if inside Jupyter
+     # DASH APPLICATION
+     #app = dash.Dash()
+     #app.layout = html.Div([dcc.Graph(figure=fig), html.Button("Texto")])
+     #app.run_server(debug=True, use_reloader=True)  # Turn off reloader if inside Jupyter
 
 
 def main2():                               
