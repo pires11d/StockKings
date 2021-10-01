@@ -13,7 +13,7 @@ pd.options.plotting.backend = "plotly"
 
 def main():                                               
     # GETS DATA FROM THE CHOSEN STOCK BY ITS NAME                      
-    symbol = "CAP.PA"
+    symbol = "MSFT"
     period = "6mo"
     S = Stock(symbol,period)
 
@@ -266,99 +266,8 @@ def main():
                      tickvals=[0, 30, 50, 70, 100], range=[0,100])
     fig.update_yaxes(title_text="Volume", row=4, col=1, 
                      spikemode="across")
-
-    # ADDS OTHER BUTTONS
-    button_layer_1_height = 1.08
-    fig.update_layout(
-        updatemenus=[
-            dict(
-                buttons=list([
-                    dict(
-                        args=["colorscale", "Viridis"],
-                        label="Viridis",
-                        method="restyle"
-                    ),
-                    dict(
-                        args=["colorscale", "Cividis"],
-                        label="Cividis",
-                        method="restyle"
-                    ),
-                    dict(
-                        args=["colorscale", "Blues"],
-                        label="Blues",
-                        method="restyle"
-                    ),
-                    dict(
-                        args=["colorscale", "Greens"],
-                        label="Greens",
-                        method="restyle"
-                    ),
-                ]),
-                direction="down",
-                pad={"r": 20, "t": 10},
-                showactive=True,
-                x=0.1,
-                xanchor="right",
-                y=button_layer_1_height,
-                yanchor="top"
-            ),
-            dict(
-                buttons=list([
-                    dict(
-                        args=["reversescale", False],
-                        label="False",
-                        method="restyle"
-                    ),
-                    dict(
-                        args=["reversescale", True],
-                        label="True",
-                        method="restyle"
-                    )
-                ]),
-                direction="down",
-                pad={"r": 20, "t": 10},
-                showactive=True,
-                x=0.37,
-                xanchor="right",
-                y=button_layer_1_height,
-                yanchor="top"
-            ),
-            dict(
-                buttons=list([
-                    dict(
-                        args=[{"contours.showlines": False, "type": "contour"}],
-                        label="Hide lines",
-                        method="restyle"
-                    ),
-                    dict(
-                        args=[{"contours.showlines": True, "type": "contour"}],
-                        label="Show lines",
-                        method="restyle"
-                    ),
-                ]),
-                direction="down",
-                pad={"r": 20, "t": 10},
-                showactive=True,
-                x=0.58,
-                xanchor="right",
-                y=button_layer_1_height,
-                yanchor="top"
-            ),
-        ]
-    )
-
-    fig.update_layout(
-        annotations=[
-            dict(text="colorscale", x=0, xref="paper", y=1.06, yref="paper",
-                                 align="left", showarrow=False),
-            dict(text="Reverse<br>Colorscale", x=0.25, xref="paper", y=1.07,
-                                 yref="paper", showarrow=False),
-            dict(text="Lines", x=0.54, xref="paper", y=1.06, yref="paper",
-                                 showarrow=False)
-        ])
                                   
-    fig.show()
-            
+    fig.show()            
 
      # DASH APPLICATION
      #app = dash.Dash()
